@@ -1,0 +1,187 @@
+<div id="role_first"></div>
+<div id="role_add_window" class="easyui-window" style="width: 500px;height: 500px;display: flex;justify-content: center;align-items: center;flex-flow: column"
+     data-options="title:'添加角色',closed:true,modal:true" >
+    <form id="role_add_form" action="addRole" class="form-group">
+        <div class="input-group" style="margin-bottom: 20px">
+            <span class="input-group-addon">角色</span>
+            <input type="text" name="roleName" class="form-control"/>
+        </div>
+    </form>
+    <div>
+        <button class="btn btn-success btn-block" onclick="role_save()">保存</button>
+    </div>
+</div>
+<div id="role_modify_window" class="easyui-window" style="width: 500px;height: 500px;display: flex;justify-content: center;align-items: center;flex-flow: column"
+     data-options="title:'修改角色',closed:true,modal:true" >
+    <form id="role_modify_form" action="modifyRole" class="form-group">
+        <div class="input-group" style="margin-bottom: 20px">
+            <span class="input-group-addon">角色</span>
+            <input type="text" name="roleName" class="form-control"/>
+        </div>
+    </form>
+    <div>
+        <button class="btn btn-success btn-block" onclick="role_modify()">修改</button>
+    </div>
+</div>
+<div id="role_resource_window" class="easyui-window" style="width: 500px;height: 500px;display: flex;justify-content: center;align-items: center;flex-flow: column"
+     data-options="title:'分配权限',closed:true,modal:true" >
+    <div id="role_resource" style="width:300px;height:100%"></div>
+    <div>
+        <button class="btn btn-success btn-block" onclick="role_resource()">修改</button>
+    </div>
+</div>
+
+<script>
+        var roletol =0;
+        function findroletol() {
+            $.get("findRoleTol",function (num) {
+                roletol = num;
+            });
+        }
+        findroletol();
+        function role_init() {
+
+            $("#role_first").datagrid({
+                title:"角色管理",
+                //url:"roles",
+                //设置分页
+                pagination:true,
+                method:"get",
+                columns:[[          //指定列属性
+                    {field:"roleId",title:"序号",checkbox:true},
+                    {field:"roleName",title:"角色",width:200},//指定获取的数据key
+                    {field:"text",title:"权限",width:200}
+                ]],
+                toolbar:[
+                    {"text":"添加",iconCls:"icon-add",handler:function(){toAddRole();}},
+                    {"text":"修改",iconCls:"icon-edit",handler:function(){toModifyRole();}},
+                    {"text":"删除",iconCls:"icon-remove",handler:function(){toDelRole();}},
+                    {text:"分配权限",iconCls:"icon-search",handler:function () {
+                        toAddRoleResource();
+                    }}
+                ]
+            });
+            fillRoleData(1,5);
+        }
+       role_init();
+        function role_resource_init() {
+            $("#role_resource").tree({
+                url:"findAllRes",
+                method:"get",
+                checkbox:true
+            });
+        }
+        role_resource_init();
+        function toAddRoleResource() {
+           var role= $("#role_first").datagrid("getSelected");
+           if(role!==null){
+                $("#role_resource_window").window("open");
+           }else{
+               $.messager.alert("系统提示","请选择需要分配的角色")
+           }
+        }
+        function role_resource() {
+            var role = $("#role_first").datagrid("getSelected");
+            var resource=$("#role_resource").tree("getChecked")
+            if(resource!==null&&resource.length>0){
+                var data=[role.roleId];
+               for(var i=0;i<resource.length;i++){
+                   data[i+1]= resource[i].resId;
+
+               }
+              var mes= JSON.stringify(data);
+                $.ajax({
+                    url:"saveRoleResource",
+                    method:"post",
+                    data:mes,
+                    contentType:"application/json",
+                    success:function (da) {
+                        if(da>0){
+                            $.messager.alert("系统提示","分配成功！");
+                            $("#role_resource_window").window("close");
+                            role_init();
+                        }
+                    }
+
+                })
+            }
+        }
+        function fillRoleData(page,size) {
+            findroletol();
+            //异步获取数据并转化为json对象
+            $.getJSON("roles",{page:page,size:size},function(data){
+                $("#role_first").datagrid("loadData",data);
+                //处理分页
+                var pager=$("#role_first").datagrid("getPager");
+                pager.pagination({
+                    total:roletol,
+                    pageSize:size,
+                    pageNumber:page,
+                    pageList:[1,2,5],
+                    onSelectPage:function(p,s){
+                        fillRoleData(p,s);
+                    }
+                });
+            });
+        }
+        function toAddRole() {
+            $("#role_add_window").window("open");
+        }
+        function toModifyRole() {
+            var data = $("#role_first").datagrid("getSelected");
+            if(data!==null){
+                $("#role_modify_form").form("load",{
+                    roleId:data.roleId,
+                    roleName:data.roleName
+                })
+                $("#role_modify_window").window("open");
+            }else{
+                $.messager.alert("系统提示","请选择需要修改的数据！")
+            }
+        }
+        function toDelRole() {
+            var data = $("#role_first").datagrid("getSelections");
+            if (data.length>0){
+                var ids = [];
+                for(var i=0;i<data.length;i++){
+                    ids[i]=data[i].roleId;
+                }
+                var arr = JSON.stringify(ids);
+                $.ajax({
+                    url:"delRoles",
+                    method:"post",
+                    data:arr,
+                    contentType:"application/json",
+                    success:function (mes) {
+                        role_init();
+                    }
+                });
+            }else{
+                $.messager.alert("系统提示","请选择需要删除的数据！");
+            }
+        }
+        function role_save() {
+            $("#role_add_form").form("submit",{
+                success:function(num){
+                    $("#role_add_window").window("close");
+                    role_init();
+                }
+            })
+        }
+        function role_modify() {
+            $("#role_modify_form").form("submit",{
+                success:function (num) {
+                    if(num==1){
+                        alert("修改成功！")
+                        $("#role_modify_window").window("close");
+                        role_init();
+                    }else {
+                        alert("修改失败！");
+                        $("#role_modify_window").window("close");
+                    }
+                }
+            })
+        }
+
+    </script>
+

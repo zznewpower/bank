@@ -1,0 +1,202 @@
+<div id="first"></div>
+<div id="user_add_window" class="easyui-window" style="width: 500px;height: 500px;display: flex;justify-content: center;align-items: center;flex-flow: column"
+     data-options="title:'添加用户',closed:true,modal:true" >
+    <form id="user_add_form" action="addUser" class="form-group">
+        <div class="input-group" style="margin-bottom: 20px">
+            <span class="input-group-addon">账号</span>
+            <input type="text" name="account" class="form-control"/>
+        </div>
+        <div class="input-group">
+            <span class="input-group-addon">密码</span>
+            <input type="password" name="password" class="form-control"/>
+        </div>
+    </form>
+    <div>
+        <button class="btn btn-success btn-block" onclick="save()">保存</button>
+    </div>
+</div>
+<div id="user_role_add_window" class="easyui-window" style="width: 500px;height: 500px;display: flex;justify-content: center;align-items: center;flex-flow: column"
+     data-options="title:'分配角色',closed:true,modal:true" >
+    <div id="rolelist" style="width:300px;height:100%"></div>
+    <div>
+        <button class="btn btn-success btn-block" onclick="save_userRole()">确定分配</button>
+    </div>
+</div>
+<div id="user_modify_window" class="easyui-window" style="width: 500px;height: 500px;display: flex;justify-content: center;align-items: center;flex-flow: column"
+     data-options="title:'修改用户',closed:true,modal:true" >
+    <form id="user_modify_form" action="modifyUser" class="form-group">
+        <input type="hidden" name="userId" />
+        <div class="input-group" style="margin-bottom: 20px">
+            <span class="input-group-addon">账号</span>
+            <input type="text" name="account" class="form-control"/>
+        </div>
+        <div class="input-group">
+            <span class="input-group-addon">密码</span>
+            <input type="password" name="password" class="form-control"/>
+        </div>
+    </form>
+    <div>
+        <button class="btn btn-success btn-block" onclick="modify()">修改</button>
+    </div>
+</div>
+    <script>
+        var tol =0;
+        function findusertol() {
+            $.get("findUserTol",function (num) {
+                tol = num;
+            });
+        }
+        function init() {
+            $("#first").datagrid({
+                title:"用户管理",
+                //url:"users",
+                //显示分页
+                pagination:true,
+                method:"get",
+                columns:[[          //指定列属性
+                    {field:"userId",title:"序号",checkbox:true},
+                    {field:"account",title:"账号",width:100},//指定获取的数据key
+                    {field:"password",title:"密码",width:100},
+                    {field:"roleName",title:"角色",width:100}
+                ]],
+                toolbar:[
+                    {"text":"添加",iconCls:"icon-add",handler:function(){toAddUser();}},
+                    {"text":"修改",iconCls:"icon-edit",handler:function(){toModifyUser();}},
+                    {"text":"删除",iconCls:"icon-remove",handler:function(){toDelUsers();}},
+                    {text:"分配权限",iconCls:"icon-search",handler:function () {
+                        toAddUserRole();
+                    }}
+                ]
+            });
+            fillData(1,5);
+        }
+        init();
+        function fenpei_init() {
+            $("#rolelist").datagrid({
+                url:"findAllRoles",
+                method:"get",
+                columns:[[          //指定列属性
+                    {field:"roleId",title:"序号",checkbox:true},
+                    {field:"roleName",title:"角色",width:100},//指定获取的数据key
+                ]]
+            });
+        }
+        fenpei_init();
+        function save_userRole() {
+           var user= $("#first").datagrid("getSelected");
+           var role= $("#rolelist").datagrid("getSelected");
+           $.get("saveUserAndRole",{userid:user.userId,roleid:role.roleId},function (num) {
+               if (num==1){
+                   $("#user_role_add_window").window("close");
+                   init();
+               }
+           })
+        }
+        function toAddUserRole() {
+            var user=$("#first").datagrid("getSelections");
+            if(user!==null&&user.length>0){
+                $("#user_role_add_window").window("open");
+            }else {
+                $.messager.alert("系统提示","请选择需要分配的用户")
+            }
+        }
+
+        function fillData(page,size) {
+            findusertol();
+            //异步获取数据并转化为json对象
+            $.getJSON("users",{page:page,size:size},function(data){
+                $("#first").datagrid("loadData",data);
+                //处理分页
+                var pager=$("#first").datagrid("getPager");
+                pager.pagination({
+                    total:tol,
+                    pageSize:size,
+                    pageNumber:page,
+                    pageList:[5,10,15],
+                    onSelectPage:function(p,s){
+                        fillData(p,s);
+                    }
+                });
+            });
+        }
+
+        //添加用户
+        function toAddUser() {
+            $("#user_add_form").form("clear");
+            $("#user_add_window").window("open");
+        }
+        //修改用户
+        function toModifyUser() {
+            var data = $("#first").datagrid("getSelected");
+            if(data!==null){
+                $("#user_modify_form").form("load",{
+                    userId:data.userId,
+                    account:data.account,
+                    password:data.password
+                })
+                $("#user_modify_window").window("open");
+            }else{
+                $.messager.alert("系统提示","请选择需要修改的数据！")
+            }
+        }
+
+        //删除用户
+        function toDelUsers() {
+            var data = $("#first").datagrid("getSelections");
+            if (data.length>0){
+                var ids = [];
+                for(var i=0;i<data.length;i++){
+                    ids[i]=data[i].userId;
+                }
+                var arr = JSON.stringify(ids);
+                $.ajax({
+                    url:"delUsers",
+                    method:"post",
+                    data:arr,
+                    contentType:"application/json",
+                    success:function (mes) {
+                        init();
+                    }
+                });
+            }else{
+                $.messager.alert("系统提示","请选择需要删除的数据！");
+            }
+        }
+
+        <!-- 删除根据单个id-->
+        function toDelUser() {
+            var data=$("#first").datagrid("getSelected");
+            alert(data.userId)
+            $.get("delUser",{userId:data.userId},function (d) {
+                if (d==1){
+                    $.messager.alert("系统提示","删除成功！");
+
+                }
+            })
+        }
+        function save() {
+            $("#user_add_form").form("submit",{
+                success:function(num){
+                    $("#user_add_window").window("close");
+                    init();
+                }
+            })
+        }
+        function modify() {
+            $("#user_modify_form").form("submit",{
+                success:function (num) {
+                    if(num==1){
+                        $.messager.alert("系统提示","修改成功！");
+                        $("#user_modify_window").window("close");
+                        init();
+                    }else {
+                        $.messager.alert("系统提示","修改失败！");
+                        $("#user_modify_window").window("close");
+                    }
+                }
+            });
+        }
+
+    </script>
+
+

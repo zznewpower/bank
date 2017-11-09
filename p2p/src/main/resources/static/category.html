@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>关系表</title>
+    <link rel="stylesheet" href="css/icon.css" />
+    <link rel="stylesheet" href="css/bootstrap.css"/>
+    <link rel="stylesheet" href="css/easyui.css">
+    <script src="js/jquery.js"></script>
+    <script src="js/easyui.js"></script>
+    <script src="js/easyui-lang-zh_CN.js"></script>
+    <script>
+        function category_init() {
+            $("#category_tree").treegrid({
+                idField:"cateid",
+                treeField:"categoryname",
+                fitColumns:true,
+                singleSelect:false,
+                 columns:[[
+                    {field:"cateid",title:"id",checkbox:true},
+                    {field:"categoryname",title:"名字"}
+                ]],
+                toolbar:[
+                    {"text":"添加",iconCls:"icon-add",handler:function(){toAddCategory();}},
+                    {"text":"修改",iconCls:"icon-edit",handler:function(){toModifyCategory();}},
+                    {"text":"删除",iconCls:"icon-remove",handler:function(){toDelCategory();}}
+                    ]
+            });
+            categoryFillDate();
+        }
+        function categoryFillDate() {
+            $.get("findAllCategory",function (date) {
+                var str = {rows:date};
+                var newstr = JSON.stringify(str);
+                var a =/pid/g;
+                var x = newstr.replace(a,"_parentId");
+                var b = /\"_parentId\":0/g;
+                var y = x.replace(b,"\"root\":0");
+                var datejson = JSON.parse(y);
+                $("#category_tree").treegrid("loadData",datejson);
+            });
+        }
+        function toAddCategory() {
+            var a=$("#category_tree").treegrid("getSelected");
+            if (a==null){
+                $.messager.alert("系统提示","请选择添加的类型");
+            }else{
+                $("#category_add_window").window("open");
+            }
+        }
+        function category_save() {
+            var date=$("#category_tree").treegrid("getSelected");
+            //language=JQuery-CSS
+            var categoryname=$("#categoryname").val();
+            var pid ="";
+            if (typeof (date._parentId)!="undefined"){
+                pid=date._parentId;
+            }else{
+                pid=date.root;
+            }
+            $.get("saveCategory",{pid:pid,categoryname:categoryname},function (num) {
+                if (num==1){
+                    $.messager.alert("系统提示","添加成功！");
+                    $("#category_add_window").window("close");
+                    category_init();
+                }
+                else{
+                    $.messager.alert("系统提示","添加失败！");
+                    $("#category_add_window").window("close");
+                }
+            });
+        }
+        function toModifyCategory() {
+            var data = $("#category_tree").treegrid("getSelected");
+            if(data!=null){
+                $("#category_modify_form").form("load",{
+                    categoryname:data.categoryname
+                });
+                $("#category_modify_window").window("open");
+            }
+        }
+        function toDelCategory() {
+            var dates=$("#category_tree").treegrid("getSelections");
+            if(dates!=null){
+                var cateids=[];
+                var pids=[];
+                for(var i=0;i<dates.length;i++){
+                    var pid ="";
+                    if (typeof (dates[i]._parentId)!="undefined"){
+                        pid=dates[i]._parentId;
+                    }else{
+                        pid=dates[i].root;
+                    }
+                    pids[i]=pid;
+                    cateids[i]=dates[i].cateid;
+                }
+                var mes ={cateids:cateids,pids:pids};
+                var date=JSON.stringify(mes);
+                alert(date);
+                $.ajax({
+                    url:"delCategoryByIds",
+                    method:"post",
+                    data:date,
+                    contentType:"application/json",
+                    success:function (num) {
+                        if(num>0){
+                            $.messager.alert("系统提示","删除成功！");
+                            category_init();
+                        }else {
+                            $.messager.alert("系统提示","删除失败！");
+                        }
+                    }
+                });
+            }else{
+                $.messager.alert("系统提示","请选择需要删除的类型")
+            }
+        }
+        //删除类型（仅单选情况下适用）
+        function toDelCategory1() {
+            var date=$("#category_tree").treegrid("getSelected");
+            if(date!=null){
+                var pid ="";
+                if (typeof (date._parentId)!="undefined"){
+                    pid=date._parentId;
+                }else{
+                    pid=date.root;
+                }
+                $.get("delCategoryById",{cateid:date.cateid,pid:pid},function (num) {
+                    if(num>0){
+                        $.messager.alert("系统提示","删除成功！");
+                        category_init();
+                    }else {
+                        $.messager.alert("系统提示","删除失败！");
+                    }
+                });
+            }else{
+                $.messager.alert("系统提示","请选择需要删除的类型")
+            }
+        }
+        $(category_init);
+    </script>
+</head>
+<body>
+    <div id="category_tree"></div>
+    <div id="category_modify_window"class="easyui-window" style="width: 500px;height: 500px;display: flex;justify-content: center;align-items: center;flex-flow: column"
+         data-options="title:'修改类型',closed:true,modal:true" >
+        <form id="category_modify_form" action="modifyCategory" class="form-group">
+            <div class="input-group" style="margin-bottom: 20px">
+                <span class="input-group-addon">类型</span>
+                <input type="text" name="categoryname" class="form-control"/>
+            </div>
+        </form>
+        <div>
+            <button class="btn btn-success btn-block" onclick="category_modify()">修改</button>
+        </div>
+    </div>
+    <div id="category_add_window"class="easyui-window" style="width: 500px;height: 500px;display: flex;justify-content: center;align-items: center;flex-flow: column"
+         data-options="title:'修改类型',closed:true,modal:true" >
+        <form id="category_add_form" class="form-group">
+            <div class="input-group" style="margin-bottom: 20px">
+                <span class="input-group-addon">类型</span>
+                <input type="text" name="categoryname" class="form-control" id="categoryname"/>
+            </div>
+        </form>
+        <div>
+            <button class="btn btn-success btn-block" onclick="category_save()">保存</button>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>商品</title>
+    <link rel="stylesheet" href="css/icon.css"/>
+    <link rel="stylesheet" href="css/easyui.css"/>
+    <link rel="stylesheet" href="css/bootstrap.css"/>
+    <script src="js/jquery.js"></script>
+    <script src="js/easyui.js"></script>
+    <script src="js/easyui-lang-zh_CN.js"></script>
+    <script src="ckeditor/ckeditor.js"></script>
+    <script>
+        function commodity_init() {
+            $("#commodity_first").datagrid({
+                title:"商品管理",
+                url:"findAllCommodity",
+                columns:[[
+                    {field:"sku",title:"id",checkbox:true},
+                    {field:"comname",title:"商品名称",width:200},
+                    {field:"price",title:"商品价格",width:200}
+                ]],
+                toolbar:[
+                    {text:"添加商品",iconCls:"icon-add",handler:function () {toAddCommodity();}},
+                    {text:"删除商品",iconCls:"icon-remove",handler:function () {toDelCommodity();}},
+                    {text:"上架",iconCls:"icon-add",handler:function () {createHTML();}},
+                    {text:"修改商品",iconCls:"icon-edit",handler:function () {toModifyCommodity();}}
+                ]
+            });
+            //combotreeCategoryFillDate();
+            CKEDITOR.replace("comment");
+        }
+        function toAddCommodity() {
+            $("#commodity_add_window").window("open");
+        }
+        function commodity_save() {
+            var data = new FormData(document.getElementById("commodity_add_form"));
+            var ckvalue=CKEDITOR.instances.comment.getData();
+            data.append("comment",ckvalue);
+            $.ajax({
+                url:"addCommodity",
+                method:"post",
+                data:data,
+                contentType:false,
+                processData:false,
+                success:function (num) {
+                    if (num==1){
+                        $.messager.alert("系统提示","添加成功");
+                        $("#commodity_add_window").window("close");
+                        $(commodity_init);
+                    }else{
+                        $.messager.alert("系统提示","添加失败");
+                        $("#commodity_add_window").window("close");
+                    }
+                }
+            });
+        }
+        function combotreeCategoryFillDate() {
+            $.get("findAllCategoryForCommodity",function (data) {
+                alert(data)
+                $("#combotree").combotree("loadData",data);
+            });
+        }
+        function createHTML() {
+            var data=$("#commodity_first").datagrid("getSelected");
+            $.get("shangjia",{sku:data.sku},function (d) {
+                $.messager.alert("系统提示",d)
+            });
+        }
+        $(commodity_init);
+    </script>
+</head>
+<body>
+    <div id="commodity_first"></div>
+    <div id="commodity_add_window" class="easyui-window" style="width: 80%;height:100%;display: flex;justify-content: center;align-items: center;flex-flow: column"
+         data-options="title:'添加商品',closed:true,modal:true" >
+        <form id="commodity_add_form" action="addCommodity" class="form-group">
+
+            <div class="input-group" style="margin-bottom: 20px">
+                <span class="input-group-addon">商品名</span>
+                <input type="text" name="comname" class="form-control"/>
+            </div>
+            <div class="input-group" style="margin-bottom: 20px">
+                <span class="input-group-addon">价格</span>
+                <input type="text" name="price" class="form-control"/>
+            </div>
+            <div class="input-group" style="margin-bottom: 20px">
+                <span class="input-group-addon">图片</span>
+                <input type="file" name="file" class="form-control"/>
+            </div>
+        </form>
+        <input id="combotree" class="easyui-combotree" data-options="url:'findAllCategoryForCommodity',required:true"  style="margin-bottom: 20px" />
+        <textarea name="comment" style="height: 800px;width: 80%" rows="3" cols="3"></textarea>
+        <div>
+            <button class="btn btn-success btn-block" onclick="commodity_save()">保存</button>
+        </div>
+    </div>
+</body>
+</html>
