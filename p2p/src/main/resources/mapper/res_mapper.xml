@@ -21,15 +21,15 @@
     <select id="findRoleRes" resultMap="children" parameterType="int">
         select a.resid as a_resid, b.resid as b_resid ,a.text as a_text ,b.text as b_text ,a.url
         as a_url,b.url as b_url from res a left join res b on a.resid=b.childrenid
-        LEFT JOIN  res_role rr on a.resid=rr.res_id LEFT join role_user ru on rr.role_id=ru.role_id
+        LEFT JOIN  role_res rr on a.resid=rr.res_id LEFT join role_user ru on rr.role_id=ru.role_id
         where a.childrenid=0 and ru.user_id=#{uid}
     </select>
     <!-- 分配权限-->
     <delete id="delRoleResource" parameterType="int">
-        DELETE from res_role where role_id=#{rid}
+        DELETE from role_res where role_id=#{rid}
     </delete>
     <insert id="saveRoleResource" parameterType="map">
-        INSERT into res_role(res_id,role_id) VALUES
+        INSERT into role_res(res_id,role_id) VALUES
         <foreach collection="arr" item="resid"  separator=",">
             (#{resid},#{rid})
         </foreach>

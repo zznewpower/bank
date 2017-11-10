@@ -1,6 +1,6 @@
 package com.p2p.service.impl;
 
-import com.p2p.beans.PreUsers;
+import com.p2p.beans.User;
 import com.p2p.dao.UserDao;
 import com.p2p.service.UserService;
 import org.springframework.stereotype.Service;
@@ -30,13 +30,13 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public int saveUser(PreUsers user) {
+    public int saveUser(User user) {
         int rol = userDao.addUser(user);
         return rol;
     }
 
     @Override
-    public PreUsers login(PreUsers user) {
+    public User login(User user) {
         return userDao.login(user);
     }
 
@@ -46,13 +46,13 @@ public class UserServiceImpl implements UserService {
         return userDao.findUserTol();
     }
 
-    public List<PreUsers> findAllUsers(Map<String,Integer> params){
-        List<PreUsers> users= userDao.findAllUsers(params);
+    public List<User> findAllUsers(Map<String,Integer> params){
+        List<User> users= userDao.findAllUsers(params);
         return users;
     }
 
     @Override
-    public int modifyUser(PreUsers user) {
+    public int modifyUser(User user) {
         return userDao.modifyUserById(user);
     }
 }

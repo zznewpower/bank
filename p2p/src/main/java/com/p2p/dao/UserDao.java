@@ -1,6 +1,6 @@
 package com.p2p.dao;
 
-import com.p2p.beans.PreUsers;
+import com.p2p.beans.User;
 import org.apache.ibatis.annotations.Mapper;
 import org.springframework.stereotype.Repository;
 
@@ -13,11 +13,11 @@ import java.util.Map;
 @Repository
 @Mapper
 public interface UserDao {
-    public List<PreUsers> findAllUsers(Map<String, Integer> params);
-    public int addUser(PreUsers user);
+    public List<User> findAllUsers(Map<String, Integer> params);
+    public int addUser(User user);
     public int deleteUserById(int UserId);
     public int deleteUserByIds(List<Integer> ids);
-    public int modifyUserById(PreUsers user);
+    public int modifyUserById(User user);
     public int findUserTol();
-    public PreUsers login(PreUsers user);
+    public User login(User user);
 }

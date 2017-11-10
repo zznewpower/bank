@@ -7,7 +7,7 @@
 
     <!-- 查询分页需要的role-->
     <select id="findAllRoles" resultType="com.p2p.beans.Role" parameterType="map">
-        select re.roleid,rs.text,re.rolename from role re LEFT JOIN  res_role rr on re.roleid=rr.role_id LEFT  join res rs on rs.resid=rr.res_id limit #{start},#{size}
+        select re.roleid,rs.text,re.rolename from role re LEFT JOIN  role_res rr on re.roleid=rr.role_id LEFT  join res rs on rs.resid=rr.res_id limit #{start},#{size}
     </select>
     <!-- 查询有多少的角色-->
     <select id="findRoleNum" resultType="int">
