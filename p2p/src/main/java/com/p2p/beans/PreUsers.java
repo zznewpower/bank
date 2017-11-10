@@ -3,7 +3,7 @@ package com.p2p.beans;
 /**
  * Created by Administrator on 2017/11/4.
  */
-public class PreUsers {
+public class User {
     //id
     private int id;
     //用户邮箱

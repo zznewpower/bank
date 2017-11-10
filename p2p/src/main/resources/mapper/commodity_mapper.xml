@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.p2p.dao.CommodityDao">
+    <insert id="addCommodity" parameterType="com.p2p.beans.Commodity">
+        INSERT  into commodity(sku,price,comname,comment) values(#{sku},#{price},#{comname},#{comment})
+    </insert>
+    <select id="findAllCommodity" resultType="com.p2p.beans.Commodity">
+        select * from commodity
+    </select>
+    <select id="findAllCommodityBySku" resultType="com.p2p.beans.Commodity">
+        select * from commodity where sku=#{sku}
+    </select>
+</mapper>
