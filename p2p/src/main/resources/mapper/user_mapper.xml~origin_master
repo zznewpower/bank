@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+        <!DOCTYPE mapper
+                PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+                "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.p2p.dao.UserDao">
+    <select id="findAllUsers" resultType="com.p2p.beans.User" parameterType="map">
+        select r.rolename,u.userid,u.account,u.password from users u LEFT JOIN role_user ru
+        on u.userid=ru.user_id LEFT JOIN role r on r.roleid=ru.role_id limit #{start},#{size}
+    </select>
+    <insert id="addUser" parameterType="com.p2p.beans.User">
+        INSERT INTO users(account,password) values(#{account},#{password})
+    </insert>
+    <delete id="deleteUserById" parameterType="int">
+        delete from users where userid =#{id}
+    </delete>
+    <delete id="deleteUserByIds" parameterType="list">
+        delete from users where userid IN
+        <foreach collection="list" item="id" open="(" close=")" separator=",">
+            #{id}
+        </foreach>
+    </delete>
+    <update id="modifyUserById" parameterType="com.p2p.beans.User">
+        update users set account=#{account},password=#{password} where userid=#{userId}
+    </update>
+    <select id="findUserTol" resultType="int">
+        select count(*) from users
+    </select>
+    <!-- 登录验证-->
+    <select id="login" parameterType="com.p2p.beans.User" resultType="com.p2p.beans.User">
+        select * from users where account=#{account} and password=#{password}
+    </select>
+</mapper>
