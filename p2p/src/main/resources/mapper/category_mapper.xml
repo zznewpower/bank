@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.p2p.dao.CategoryDao">
+    <select id="findAllCategory" resultType="com.p2p.beans.Category">
+        select * from category
+    </select>
+    <!--添加类型-->
+    <insert id="addCategory" parameterType="com.p2p.beans.Category">
+        insert into category(categoryname,pid) values(#{categoryname},#{pid})
+    </insert>
+    <!-- 删除-->
+    <!-- 根据父节点的id删除所有子节点以及本身-->
+    <delete id="delCategoryByFid" parameterType="int">
+        delete from category where cateid=#{cateid} or pid=#{cateid}
+    </delete>
+    <!--根据子节点id删除某个子节点-->
+    <delete id="delCategoryByChildrenID" parameterType="int">
+        delete from category where cateid=#{cateid}
+    </delete>
+    <!--复选删除-->
+    <delete id="delCategoryByIds" parameterType="list">
+        delete from category
+        <where>
+          <foreach collection="list" item="category">
+              <choose>
+                  <when test="category.pid==0">
+                     or cateid=#{category.cateid} or pid=#{category.cateid}
+                  </when>
+                  <when test="category.pid!=0">
+                       or cateid=#{category.cateid}
+                  </when>
+              </choose>
+          </foreach>
+        </where>
+    </delete>
+</mapper>
