@@ -1,6 +1,6 @@
 package com.p2p.controller;
 
-import com.p2p.beans.User;
+import com.p2p.beans.PreUsers;
 import com.p2p.service.UserService;
 import com.p2p.until.SecurityUtil;
 import org.apache.shiro.SecurityUtils;
@@ -33,7 +33,7 @@ public class UserController {
     }
 
     @RequestMapping("users")
-    public List<User> selectUser(int page,int size) {
+    public List<PreUsers> selectUser(int page, int size) {
         Map<String,Integer> params = new HashMap<>();
         int start = (page-1)*size;
         params.put("start",start);
@@ -42,7 +42,7 @@ public class UserController {
     }
 
     @RequestMapping("addUser")
-    public int saveUser(User user){
+    public int saveUser(PreUsers user){
         String pwd = SecurityUtil.addSecurity(user.getPassword());
         user.setPassword(pwd);
         int rol = userService.saveUser(user);
@@ -60,7 +60,7 @@ public class UserController {
     }
 
     @RequestMapping("/modifyUser")
-    public int modifyUser(User user){
+    public int modifyUser(PreUsers user){
         String pwd = SecurityUtil.addSecurity(user.getPassword());
         user.setPassword(pwd);
         return  userService.modifyUser(user);
@@ -73,10 +73,10 @@ public class UserController {
     }
 
     @RequestMapping("login")
-    public int login(User user, HttpSession session){
+    public int login(PreUsers user, HttpSession session){
         String pwd = SecurityUtil.addSecurity(user.getPassword());
         user.setPassword(pwd);
-        User user1 = userService.login(user);
+        PreUsers user1 = userService.login(user);
 
         //使用shiro进行验证
         try {

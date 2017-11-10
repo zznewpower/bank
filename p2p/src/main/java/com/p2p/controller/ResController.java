@@ -1,7 +1,7 @@
 package com.p2p.controller;
 
 import com.p2p.beans.Res;
-import com.p2p.beans.User;
+import com.p2p.beans.PreUsers;
 import com.p2p.service.ResService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
@@ -43,7 +43,7 @@ public class ResController {
 
     @RequestMapping("findAllRoleRes")
     public List<Res> findRoleRes(HttpSession session){
-        User u = (User)session.getAttribute("user");
+        PreUsers u = (PreUsers)session.getAttribute("user");
         int uid = u.getUserId();
         return resService.findRoleRes(uid);
     }
